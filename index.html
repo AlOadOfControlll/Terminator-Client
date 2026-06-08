@@ -2,217 +2,181 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Terminator Video Editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terminator Client</title>
 <style>
-:root{
-    --red:#ff1a1a;
-    --dark:#070707;
-    --panel:#111111;
-}
-*{
+/* General body */
+body {
     margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Segoe UI, Arial, sans-serif;
-}
-body{
-    background:#000;
+    font-family:Arial, sans-serif;
+    background:#0a0a0a;
     color:white;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+}
+
+/* Header */
+header {
+    background:#111;
+    border-bottom:2px solid red;
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    position:relative;
     overflow:hidden;
 }
-#bg{
-    position:fixed;
-    inset:0;
-    background: radial-gradient(circle at top,#700000 0%,#000 60%);
+
+header h1 {
+    color:red;
+    margin:0;
+    text-shadow:0 0 10px red;
+    animation: glow 1.5s infinite alternate;
 }
-#particles{
-    position:fixed;
-    inset:0;
+
+/* Glow animation */
+@keyframes glow {
+    from { text-shadow: 0 0 10px red; }
+    to { text-shadow: 0 0 20px #ff0000, 0 0 30px red; }
 }
-.sidebar{
-    position:fixed;
-    left:0;
-    top:0;
-    width:260px;
-    height:100%;
-    background:rgba(10,10,10,.9);
-    border-right:2px solid var(--red);
-    z-index:5;
-}
-.logo{
-    text-align:center;
-    font-size:38px;
-    font-weight:900;
-    color:var(--red);
-    margin-top:25px;
-    text-shadow:0 0 20px red;
-}
-.subtitle{
-    text-align:center;
-    color:#aaa;
-    margin-bottom:20px;
-}
-.btn{
-    width:90%;
-    margin:10px auto;
-    display:block;
-    padding:14px;
+
+/* Buttons */
+button {
+    background:red;
     border:none;
-    cursor:pointer;
-    background:#1a1a1a;
+    padding:8px;
     color:white;
-    border:1px solid var(--red);
-    transition:.25s;
+    cursor:pointer;
+    margin-left:5px;
 }
-.btn:hover{
-    background:var(--red);
-    transform:translateX(5px);
-}
-.main{
-    margin-left:260px;
-    height:100vh;
+
+/* Main container */
+.container {
     display:flex;
-    justify-content:center;
-    align-items:center;
+    flex:1;
+    padding:10px;
+    gap:10px;
 }
-.launcher{
-    width:850px;
-    max-width:95%;
-    background:rgba(15,15,15,.9);
-    border:2px solid var(--red);
-    border-radius:18px;
-    padding:30px;
-    backdrop-filter:blur(10px);
-}
-h1{
-    color:var(--red);
-    text-align:center;
-    margin-bottom:10px;
-}
-.welcome{
-    text-align:center;
-    color:#ccc;
-    margin-bottom:25px;
-}
-.serverbox{
-    background:#090909;
-    border:1px solid #333;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:20px;
-}
-input,select{
-    width:100%;
-    padding:12px;
-    margin-top:10px;
+
+/* Controls panel */
+.controls {
+    width:220px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
     background:#111;
-    border:1px solid #333;
-    color:white;
+    border:2px solid red;
+    padding:10px;
+    border-radius:8px;
 }
-.launch{
+
+/* Inputs */
+input[type="range"], input[type="number"], textarea {
     width:100%;
-    padding:16px;
-    margin-top:15px;
-    font-size:18px;
-    font-weight:bold;
-    background:var(--red);
-    color:white;
-    border:none;
-    cursor:pointer;
+    background:#111;
+    color:#ff0000;
+    border:1px solid red;
+    padding:5px;
+    font-family:monospace;
 }
-.launch:hover{
-    filter:brightness(1.15);
-}
-iframe{
-    position:fixed;
-    inset:0;
-    width:100%;
-    height:100%;
-    border:none;
-    display:none;
-    z-index:100;
+
+/* Video and canvas */
+video, canvas {
+    flex:1;
+    background:#222;
+    border:2px solid red;
+    border-radius:8px;
+    max-height:70vh;
 }
 </style>
 </head>
 <body>
 
-<div id="bg"></div>
-<canvas id="particles"></canvas>
+<header>
+<h1>Welcome, Terminator! Ready to edit.</h1>
+<div>
+<input type="file" id="videoFile" accept="video/*">
+<button onclick="play()">Play</button>
+<button onclick="pause()">Pause</button>
+<button onclick="exportVideo()">Export</button>
+</div>
+</header>
 
-<div class="sidebar">
-    <div class="logo">TERMINATOR</div>
-    <div class="subtitle">Browser Client</div>
-    <button class="btn">Home</button>
-    <button class="btn">Multiplayer</button>
-    <button class="btn">Settings</button>
-    <button class="btn">Resource Packs</button>
-    <button class="btn">About</button>
+<div class="container">
+<div class="controls">
+<label>Start (sec)</label><input type="number" id="start" value="0" min="0">
+<label>End (sec)</label><input type="number" id="end" value="10" min="0">
+<label>Text overlay</label><textarea id="overlayText">Terminator says hello!</textarea>
+<label>Brightness</label><input type="range" id="brightness" min="0" max="2" value="1" step="0.05">
+<label>Grayscale</label><input type="range" id="grayscale" min="0" max="1" value="0" step="0.05">
 </div>
 
-<div class="main">
-    <div class="launcher">
-        <h1>WELCOME TO TERMINATOR</h1>
-        <div class="welcome">Futuristic Minecraft Browser Launcher</div>
-        <div class="serverbox">
-            Username
-            <input id="username" value="Player">
-            Server
-            <select id="server">
-                <option>https://eaglercraft.com/play</option>
-                <!-- Add more servers here -->
-            </select>
-        </div>
-        <button class="launch" onclick="launchClient()">LAUNCH GAME</button>
-    </div>
+<video id="video" controls></video>
+<canvas id="canvas"></canvas>
 </div>
-
-<iframe id="game"></iframe>
 
 <script>
-function launchClient(){
-    const frame = document.getElementById("game");
-    const server = document.getElementById("server").value;
-    frame.src = server;
-    frame.style.display = "block";
-}
-
-const canvas = document.getElementById("particles");
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const overlayText = document.getElementById("overlayText");
+const brightness = document.getElementById("brightness");
+const grayscale = document.getElementById("grayscale");
+const startInput = document.getElementById("start");
+const endInput = document.getElementById("end");
+let mediaRecorder;
+let recordedChunks = [];
 
-function resize(){
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-}
-resize();
-addEventListener("resize", resize);
+document.getElementById("videoFile").addEventListener("change", (e)=>{
+    const file = e.target.files[0];
+    if(file) video.src = URL.createObjectURL(file);
+});
 
-const particles = [];
-for(let i=0;i<120;i++){
-    particles.push({
-        x:Math.random()*innerWidth,
-        y:Math.random()*innerHeight,
-        r:Math.random()*2+1,
-        dx:(Math.random()-.5)*0.5,
-        dy:(Math.random()-.5)*0.5
-    });
+video.addEventListener("loadedmetadata", ()=>{
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+});
+
+function drawFrame(){
+    if(video.paused || video.ended) return;
+    ctx.filter = `brightness(${brightness.value}) grayscale(${grayscale.value})`;
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "red";
+    ctx.font = "30px Arial";
+    ctx.fillText(overlayText.value, 20, 50);
+    requestAnimationFrame(drawFrame);
 }
 
-function animate(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    particles.forEach(p=>{
-        p.x+=p.dx;
-        p.y+=p.dy;
-        if(p.x<0||p.x>canvas.width)p.dx*=-1;
-        if(p.y<0||p.y>canvas.height)p.dy*=-1;
-        ctx.beginPath();
-        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle="rgba(255,0,0,.8)";
-        ctx.fill();
-    });
-    requestAnimationFrame(animate);
+function play(){
+    video.currentTime = parseFloat(startInput.value) || 0;
+    video.play();
+    drawFrame();
 }
-animate();
+
+function pause(){
+    video.pause();
+}
+
+function exportVideo(){
+    const stream = canvas.captureStream(30);
+    mediaRecorder = new MediaRecorder(stream, {mimeType:"video/webm"});
+    recordedChunks=[];
+    mediaRecorder.ondataavailable = e=>{if(e.data.size>0) recordedChunks.push(e.data);}
+    mediaRecorder.onstop = ()=>{
+        const blob = new Blob(recordedChunks,{type:"video/webm"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "terminator_video.webm";
+        a.click();
+    };
+    mediaRecorder.start();
+    video.currentTime = parseFloat(startInput.value) || 0;
+    video.play();
+    drawFrame();
+    setTimeout(()=>{video.pause(); mediaRecorder.stop();}, (endInput.value-startInput.value)*1000);
+}
 </script>
 
 </body>
