@@ -2,194 +2,181 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Terminator Browser</title>
+<title>Terminator Cyber OS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 :root {
-  --theme: lime;
+  --theme: #00ff99;
+  --bg: #000;
+  --text: #00ff99;
 }
-
 body {
   margin:0;
   font-family: monospace;
-  background:black;
-  color:var(--theme);
+  background:var(--bg);
+  color:var(--text);
   overflow:hidden;
 }
 
-/* BOOT */
-#boot {
+/* BOOT SCREEN */
+#boot{
   position:fixed;
   inset:0;
   display:flex;
   justify-content:center;
   align-items:center;
   flex-direction:column;
-  font-size:40px;
+  font-size:50px;
   text-shadow:0 0 20px var(--theme);
+  z-index:9999;
   background:black;
-  z-index:999;
+  animation: flicker 0.1s infinite alternate;
+}
+@keyframes flicker{
+  0%{opacity:0.7;}
+  50%{opacity:1;}
+  100%{opacity:0.8;}
 }
 
-/* TOP BAR (Chrome style) */
-#topbar {
-  display:flex;
-  align-items:center;
-  background:#111;
-  border-bottom:2px solid var(--theme);
-  padding:5px;
-  gap:10px;
-}
+/* DESKTOP */
+#desktop{display:none;width:100vw;height:100vh;position:relative;background:#000;}
 
-#url {
-  flex:1;
-  padding:8px;
-  background:black;
-  border:1px solid var(--theme);
-  color:var(--theme);
+/* TASKBAR */
+#taskbar{
+  position:absolute;bottom:0;left:0;right:0;height:40px;background:#111;border-top:2px solid var(--theme);display:flex;align-items:center;padding:0 10px;gap:10px;
 }
+#startBtn{background:var(--theme);color:black;border:none;padding:5px 10px;cursor:pointer;font-weight:bold;}
 
-/* BUTTONS */
-button {
-  background:var(--theme);
-  color:black;
-  border:none;
-  padding:8px;
-  cursor:pointer;
-  font-weight:bold;
+/* START MENU */
+#startMenu{
+  position:absolute;bottom:45px;left:10px;width:220px;background:#111;border:2px solid var(--theme);display:none;flex-direction:column;
 }
+#startMenu button{
+  background:none;border:none;color:var(--theme);padding:10px;text-align:left;cursor:pointer;
+}
+#startMenu button:hover{background:var(--theme);color:black;}
 
-/* MAIN LAYOUT */
-#browser {
-  display:none;
-  height:100vh;
-  flex-direction:column;
+/* WINDOWS */
+.window{
+  position:absolute;width:600px;height:400px;background:#0a0a0a;border:2px solid var(--theme);display:none;flex-direction:column;box-shadow:0 0 20px var(--theme);
+  resize:both; overflow:auto;
 }
+.titlebar{
+  background:#111;padding:5px;cursor:move;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--theme);
+}
+.content{flex:1;padding:10px;overflow:auto;}
 
-#content {
-  flex:1;
-  display:flex;
-}
+/* FILES */
+.file{padding:5px;border:1px solid var(--theme);margin:5px;cursor:pointer;}
 
-/* IFRAME AREA */
-iframe {
-  flex:1;
-  border:none;
-  background:white;
-}
+/* INPUTS */
+input, select, button{background:black;color:var(--theme);border:1px solid var(--theme);padding:5px;}
 
-/* MOD MENU */
-#modmenu {
-  position:fixed;
-  top:50px;
-  right:0;
-  width:300px;
-  height:calc(100% - 50px);
-  background:#111;
-  border-left:2px solid var(--theme);
-  display:none;
-  flex-direction:column;
-  padding:10px;
-  gap:10px;
-}
+/* MOD OVERLAY */
+#overlay{position:fixed;inset:0;pointer-events:none;opacity:0.15;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--theme) 3px);display:none;z-index:999;}
+#matrixCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:998;pointer-events:none;}
 
-/* EXTENSIONS PANEL */
-.extension {
-  padding:8px;
-  border:1px solid var(--theme);
-  cursor:pointer;
-}
+/* TERMINAL */
+pre{height:100%;overflow:auto;}
 
-/* THEME PICKER */
-input[type="color"] {
-  width:100%;
-}
-
-.glow {
-  text-shadow:0 0 10px var(--theme);
-}
+/* TAB STYLE */
+.tabbar{display:flex;gap:5px;padding-bottom:5px;}
+.tab{padding:5px;background:#111;border:1px solid var(--theme);cursor:pointer;}
+.tab.active{background:var(--theme);color:black;}
 </style>
 </head>
-
 <body>
 
-<!-- BOOT SCREEN -->
-<div id="boot">
-  WELCOME TERMINATOR
-  <div style="font-size:14px; margin-top:10px;">Initializing browser core...</div>
-</div>
+<!-- BOOT -->
+<div id="boot">WELCOME TERMINATOR<br><span style="font-size:18px;">Booting Cyber OS...</span></div>
 
-<!-- BROWSER -->
-<div id="browser">
+<!-- HACK OVERLAY -->
+<div id="overlay"></div>
+<canvas id="matrixCanvas"></canvas>
 
-  <!-- TOP BAR -->
-  <div id="topbar">
-    <button onclick="toggleMod()">MOD</button>
-    <input id="url" placeholder="Search or enter URL">
-    <button onclick="go()">GO</button>
+<!-- DESKTOP -->
+<div id="desktop">
+
+  <!-- START MENU -->
+  <div id="startMenu">
+    <button onclick="openApp('browserWin')">Browser</button>
+    <button onclick="openApp('filesWin')">File Explorer</button>
+    <button onclick="openApp('terminalWin')">Terminal</button>
+    <button onclick="openApp('settingsWin')">Settings</button>
+    <button onclick="toggleOverlay()">Hack Overlay</button>
   </div>
 
-  <div id="content">
-    <iframe id="frame"></iframe>
+  <!-- BROWSER WINDOW -->
+  <div class="window" id="browserWin">
+    <div class="titlebar" onmousedown="drag(event,this.parentNode)"><span>Browser</span><button onclick="closeApp('browserWin')">X</button></div>
+    <div class="content">
+      <div class="tabbar" id="browserTabs"></div>
+      <button onclick="newTab()">New Tab</button>
+      <div>
+        <input id="urlInput" placeholder="Search or URL">
+        <button onclick="go()">GO</button>
+      </div>
+      <iframe id="browserFrame" style="width:100%;height:300px;border:none;"></iframe>
+    </div>
   </div>
 
-</div>
+  <!-- FILE EXPLORER -->
+  <div class="window" id="filesWin">
+    <div class="titlebar" onmousedown="drag(event,this.parentNode)"><span>File Explorer</span><button onclick="closeApp('filesWin')">X</button></div>
+    <div class="content" id="fileContent">
+      <div class="file">projects/</div>
+      <div class="file">media/</div>
+      <div class="file">system.log</div>
+    </div>
+  </div>
 
-<!-- MOD MENU -->
-<div id="modmenu">
-  <h2 class="glow">MOD MENU</h2>
+  <!-- TERMINAL -->
+  <div class="window" id="terminalWin">
+    <div class="titlebar" onmousedown="drag(event,this.parentNode)"><span>Terminal</span><button onclick="closeApp('terminalWin')">X</button></div>
+    <div class="content">
+      <pre id="terminalLog"></pre>
+      <input onkeydown="cmd(event)" placeholder="commands: scan / theme / overlay / open">
+    </div>
+  </div>
 
-  <button onclick="fakeLog('Network Scan running...')">Network Scan</button>
-  <button onclick="fakeLog('Packet analyzer active...')">Packet View</button>
-  <button onclick="fakeLog('Rendering overlay...')">Overlay Mode</button>
+  <!-- SETTINGS -->
+  <div class="window" id="settingsWin">
+    <div class="titlebar" onmousedown="drag(event,this.parentNode)"><span>Settings</span><button onclick="closeApp('settingsWin')">X</button></div>
+    <div class="content">
+      <h3>Theme Color</h3>
+      <input type="color" onchange="setTheme(this.value)">
+    </div>
+  </div>
 
-  <h3>Theme</h3>
-  <input type="color" oninput="setTheme(this.value)">
-
-  <h3>Extensions</h3>
-  <div class="extension" onclick="fakeLog('AdBlock toggled (simulated)')">AdBlock</div>
-  <div class="extension" onclick="fakeLog('Dark Mode forced')">Dark Mode</div>
-  <div class="extension" onclick="fakeLog('UI Injector loaded')">UI Injector</div>
-
-  <h3>Console</h3>
-  <div id="console" style="font-size:12px; height:200px; overflow:auto; border:1px solid var(--theme); padding:5px;"></div>
+  <!-- TASKBAR -->
+  <div id="taskbar"><button id="startBtn" onclick="toggleStart()">START</button></div>
 </div>
 
 <script>
+/* BOOT */
+setTimeout(()=>{document.getElementById("boot").style.display="none";document.getElementById("desktop").style.display="block";startMatrix();},4000);
 
-setTimeout(() => {
-  document.getElementById("boot").style.display = "none";
-  document.getElementById("browser").style.display = "flex";
-}, 4000);
+/* START MENU */
+function toggleStart(){const s=document.getElementById("startMenu");s.style.display=s.style.display==="flex"?"none":"flex";}
 
-/* NAVIGATION */
-function go(){
-  let url = document.getElementById("url").value;
-  if(!url.startsWith("http")) url = "https://www.google.com/search?q=" + url;
-  document.getElementById("frame").src = url;
-}
+/* WINDOWS */
+function openApp(id){document.getElementById(id).style.display="flex";}
+function closeApp(id){document.getElementById(id).style.display="none";}
 
-/* MOD MENU */
-function toggleMod(){
-  const m = document.getElementById("modmenu");
-  m.style.display = m.style.display === "flex" ? "none" : "flex";
-}
+/* DRAG */
+let dragTarget=null,offsetX,offsetY;
+function drag(e,el){dragTarget=el;offsetX=e.clientX-el.offsetLeft;offsetY=e.clientY-el.offsetTop;document.onmousemove=move;document.onmouseup=()=>{document.onmousemove=null;dragTarget=null;}}
+function move(e){if(!dragTarget)return;dragTarget.style.left=(e.clientX-offsetX)+"px";dragTarget.style.top=(e.clientY-offsetY)+"px";}
 
 /* THEME */
-function setTheme(color){
-  document.documentElement.style.setProperty("--theme", color);
-}
+function setTheme(c){document.documentElement.style.setProperty("--theme",c);}
 
-/* FAKE CONSOLE */
-function fakeLog(text){
-  const c = document.getElementById("console");
-  const time = new Date().toLocaleTimeString();
-  c.innerHTML += `[${time}] ${text}<br>`;
-  c.scrollTop = c.scrollHeight;
-}
+/* TERMINAL */
+function log(t){const l=document.getElementById("terminalLog");l.innerText+=t+"\n";l.scrollTop=l.scrollHeight;}
+function cmd(e){if(e.key==="Enter"){let v=e.target.value.toLowerCase();e.target.value="";if(v==="scan")log("Scanning system... OK (simulated)");else if(v==="overlay")toggleOverlay();else if(v==="theme")log("Use settings panel");else if(v.startsWith("open")){if(v.includes("browser"))openApp('browserWin');if(v.includes("files"))openApp('filesWin');}else log("Unknown command");}}
 
-</script>
-
-</body>
-</html>
+/* BROWSER */
+let tabs=[];
+function newTab(name="New Tab"){const tbar=document.getElementById("browserTabs");const tab=document.createElement("div");tab.className="tab active";tab.innerText=name;tbar.appendChild(tab);tabs.push(tab);setActiveTab(tab);}
+function setActiveTab(tab){tabs.forEach(t=>t.classList.remove("active"));tab.classList.add("active");document.getElementById("browserFrame").src="";}
+function go(){let u=document.getElementById("urlInput").value;if(!u.startsWith("http"))u="https://www.google.com/search
