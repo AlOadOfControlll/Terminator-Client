@@ -2,131 +2,193 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Safe Hacker Mod Menu</title>
+<title>Terminator Browser</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
+:root {
+  --theme: lime;
+}
+
 body {
   margin:0;
-  font-family: 'Courier New', monospace;
+  font-family: monospace;
   background:black;
-  color:lime;
+  color:var(--theme);
   overflow:hidden;
 }
 
-/* Loading screen */
-#loader {
+/* BOOT */
+#boot {
   position:fixed;
   inset:0;
   display:flex;
   justify-content:center;
   align-items:center;
   flex-direction:column;
-  font-size:50px;
-  text-shadow:0 0 20px lime;
-  animation:flicker 1s infinite alternate;
+  font-size:40px;
+  text-shadow:0 0 20px var(--theme);
+  background:black;
+  z-index:999;
 }
 
-@keyframes flicker { from{opacity:0.7;} to{opacity:1;} }
-
-/* Main dashboard */
-#dashboard {
-  display:none;
-  height:100vh;
+/* TOP BAR (Chrome style) */
+#topbar {
   display:flex;
-  flex-direction:row;
-}
-
-/* Sidebar menu */
-.sidebar {
-  width:250px;
+  align-items:center;
   background:#111;
-  border-right:2px solid lime;
-  display:flex;
-  flex-direction:column;
-  padding:20px;
+  border-bottom:2px solid var(--theme);
+  padding:5px;
   gap:10px;
 }
 
-.sidebar button {
-  background:lime;
+#url {
+  flex:1;
+  padding:8px;
+  background:black;
+  border:1px solid var(--theme);
+  color:var(--theme);
+}
+
+/* BUTTONS */
+button {
+  background:var(--theme);
   color:black;
   border:none;
-  padding:12px;
+  padding:8px;
   cursor:pointer;
   font-weight:bold;
 }
 
-/* Main screen */
-.main {
+/* MAIN LAYOUT */
+#browser {
+  display:none;
+  height:100vh;
+  flex-direction:column;
+}
+
+#content {
   flex:1;
   display:flex;
-  flex-direction:column;
-  padding:20px;
-  overflow:auto;
 }
 
-/* Output console */
-.console {
-  background:#000;
-  border:2px solid lime;
+/* IFRAME AREA */
+iframe {
   flex:1;
+  border:none;
+  background:white;
+}
+
+/* MOD MENU */
+#modmenu {
+  position:fixed;
+  top:50px;
+  right:0;
+  width:300px;
+  height:calc(100% - 50px);
+  background:#111;
+  border-left:2px solid var(--theme);
+  display:none;
+  flex-direction:column;
   padding:10px;
-  overflow-y:auto;
-  font-size:14px;
-  white-space:pre-wrap;
+  gap:10px;
 }
 
-/* Fancy effect */
-.fancy-button {
-  position:relative;
-  overflow:hidden;
+/* EXTENSIONS PANEL */
+.extension {
+  padding:8px;
+  border:1px solid var(--theme);
+  cursor:pointer;
 }
 
-.fancy-button::before {
-  content:'';
-  position:absolute;
-  top:0; left:-100%;
-  width:100%; height:100%;
-  background:rgba(255,255,255,0.2);
-  transform:skewX(-20deg);
-  transition:0.5s;
+/* THEME PICKER */
+input[type="color"] {
+  width:100%;
 }
 
-.fancy-button:hover::before {
-  left:100%;
+.glow {
+  text-shadow:0 0 10px var(--theme);
 }
 </style>
 </head>
+
 <body>
 
-<div id="loader">WELCOME TERMINATOR</div>
+<!-- BOOT SCREEN -->
+<div id="boot">
+  WELCOME TERMINATOR
+  <div style="font-size:14px; margin-top:10px;">Initializing browser core...</div>
+</div>
 
-<div id="dashboard">
-  <div class="sidebar">
-    <button class="fancy-button" onclick="fakeAction('Scan network...')">Network Scan</button>
-    <button class="fancy-button" onclick="fakeAction('Bypassing firewall...')">Firewall Bypass</button>
-    <button class="fancy-button" onclick="fakeAction('Accessing database...')">Database Access</button>
-    <button class="fancy-button" onclick="fakeAction('Modifying settings...')">Settings Mod</button>
-    <button class="fancy-button" onclick="fakeAction('Injecting code...')">Code Injection</button>
+<!-- BROWSER -->
+<div id="browser">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <button onclick="toggleMod()">MOD</button>
+    <input id="url" placeholder="Search or enter URL">
+    <button onclick="go()">GO</button>
   </div>
-  <div class="main">
-    <h1>Safe Hacker Mod Menu</h1>
-    <div class="console" id="console"></div>
+
+  <div id="content">
+    <iframe id="frame"></iframe>
   </div>
+
+</div>
+
+<!-- MOD MENU -->
+<div id="modmenu">
+  <h2 class="glow">MOD MENU</h2>
+
+  <button onclick="fakeLog('Network Scan running...')">Network Scan</button>
+  <button onclick="fakeLog('Packet analyzer active...')">Packet View</button>
+  <button onclick="fakeLog('Rendering overlay...')">Overlay Mode</button>
+
+  <h3>Theme</h3>
+  <input type="color" oninput="setTheme(this.value)">
+
+  <h3>Extensions</h3>
+  <div class="extension" onclick="fakeLog('AdBlock toggled (simulated)')">AdBlock</div>
+  <div class="extension" onclick="fakeLog('Dark Mode forced')">Dark Mode</div>
+  <div class="extension" onclick="fakeLog('UI Injector loaded')">UI Injector</div>
+
+  <h3>Console</h3>
+  <div id="console" style="font-size:12px; height:200px; overflow:auto; border:1px solid var(--theme); padding:5px;"></div>
 </div>
 
 <script>
+
 setTimeout(() => {
-  document.getElementById('loader').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'flex';
+  document.getElementById("boot").style.display = "none";
+  document.getElementById("browser").style.display = "flex";
 }, 4000);
 
-const consoleEl = document.getElementById('console');
-
-function fakeAction(text){
-  const msg = `[${new Date().toLocaleTimeString()}] ${text}`;
-  consoleEl.textContent += msg + '\n';
-  consoleEl.scrollTop = consoleEl.scrollHeight;
+/* NAVIGATION */
+function go(){
+  let url = document.getElementById("url").value;
+  if(!url.startsWith("http")) url = "https://www.google.com/search?q=" + url;
+  document.getElementById("frame").src = url;
 }
+
+/* MOD MENU */
+function toggleMod(){
+  const m = document.getElementById("modmenu");
+  m.style.display = m.style.display === "flex" ? "none" : "flex";
+}
+
+/* THEME */
+function setTheme(color){
+  document.documentElement.style.setProperty("--theme", color);
+}
+
+/* FAKE CONSOLE */
+function fakeLog(text){
+  const c = document.getElementById("console");
+  const time = new Date().toLocaleTimeString();
+  c.innerHTML += `[${time}] ${text}<br>`;
+  c.scrollTop = c.scrollHeight;
+}
+
 </script>
 
 </body>
