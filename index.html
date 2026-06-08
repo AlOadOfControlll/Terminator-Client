@@ -5,7 +5,6 @@
 <title>Terminator Video Editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-/* General body */
 body {
     margin:0;
     font-family:Arial, sans-serif;
@@ -14,54 +13,40 @@ body {
     display:flex;
     flex-direction:column;
     height:100vh;
-}
-
-/* Header */
-header {
-    background:#111;
-    border-bottom:2px solid red;
-    padding:15px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    position:relative;
     overflow:hidden;
 }
-
-header h1 {
+header {
+    display:none; /* Will show after intro */
+}
+#intro {
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background:#0a0a0a;
+    z-index:10;
     color:red;
-    margin:0;
-    text-shadow:0 0 10px red;
-    animation: glow 1.5s infinite alternate;
+    font-size:50px;
+    text-shadow:0 0 20px red;
 }
-
-/* Glow animation */
-@keyframes glow {
-    from { text-shadow: 0 0 10px red; }
-    to { text-shadow: 0 0 20px #ff0000, 0 0 30px red; }
+#intro.hidden { display:none; }
+#projectPanel {
+    display:none;
+    flex-direction:column;
+    gap:10px;
+    padding:20px;
 }
-
-/* Buttons */
-button {
-    background:red;
-    border:none;
-    padding:8px;
-    color:white;
-    cursor:pointer;
-    margin-left:5px;
-}
-
-/* Main container */
 .container {
     display:flex;
     flex:1;
     padding:10px;
     gap:10px;
 }
-
-/* Controls panel */
 .controls {
-    width:220px;
+    width:250px;
     display:flex;
     flex-direction:column;
     gap:10px;
@@ -70,9 +55,7 @@ button {
     padding:10px;
     border-radius:8px;
 }
-
-/* Inputs */
-input[type="range"], input[type="number"], textarea {
+input, textarea, select {
     width:100%;
     background:#111;
     color:#ff0000;
@@ -80,8 +63,6 @@ input[type="range"], input[type="number"], textarea {
     padding:5px;
     font-family:monospace;
 }
-
-/* Video and canvas */
 video, canvas {
     flex:1;
     background:#222;
@@ -93,8 +74,23 @@ video, canvas {
 </head>
 <body>
 
+<div id="intro">
+    <div id="welcomeText">Welcome, Terminator!</div>
+</div>
+
+<div id="projectPanel">
+    <label>New Project Name</label><input id="projectName" placeholder="My Epic Video">
+    <label>Aspect Ratio</label>
+    <select id="aspectRatio">
+        <option value="16:9">16:9</option>
+        <option value="9:16">9:16</option>
+        <option value="1:1">1:1</option>
+    </select>
+    <button id="startProject">Start Project</button>
+</div>
+
 <header>
-<h1>Welcome, Terminator! Ready to edit.</h1>
+<h1>Terminator Video Editor</h1>
 <div>
 <input type="file" id="videoFile" accept="video/*">
 <button onclick="play()">Play</button>
@@ -117,65 +113,101 @@ video, canvas {
 </div>
 
 <script>
+const intro = document.getElementById("intro");
+const welcomeText = document.getElementById("welcomeText");
+const projectPanel = document.getElementById("projectPanel");
+const startProjectBtn = document.getElementById("startProject");
+
+let step = 0;
+
+// Intro sequence
+function showIntroStep() {
+    if(step === 0){
+        welcomeText.innerText = "Welcome, Terminator!";
+    } else if(step === 1){
+        welcomeText.innerText = "New Project Settings & Profile";
+    } else if(step === 2){
+        welcomeText.innerText = "About";
+    } else {
+        intro.classList.add("hidden");
+        projectPanel.style.display = "flex";
+        return;
+    }
+    step++;
+    setTimeout(showIntroStep, 3000); // 3 seconds per step
+}
+showIntroStep();
+
+// Start project button
+startProjectBtn.addEventListener("click", ()=>{
+    projectPanel.style.display = "none";
+    document.querySelector("header").style.display = "flex";
+    document.querySelector(".container").style.display = "flex";
+    // Initialize canvas, video, etc.
+});
+
+// Existing video editor setup
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+
 const overlayText = document.getElementById("overlayText");
 const brightness = document.getElementById("brightness");
 const grayscale = document.getElementById("grayscale");
 const startInput = document.getElementById("start");
 const endInput = document.getElementById("end");
+
 let mediaRecorder;
 let recordedChunks = [];
+let isDrawing = false;
+let rafId = null;
 
-document.getElementById("videoFile").addEventListener("change", (e)=>{
+document.getElementById("videoFile").addEventListener("change", (e) => {
     const file = e.target.files[0];
-    if(file) video.src = URL.createObjectURL(file);
+    if (file) video.src = URL.createObjectURL(file);
 });
 
-video.addEventListener("loadedmetadata", ()=>{
+video.addEventListener("loadedmetadata", () => {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 });
 
-function drawFrame(){
-    if(video.paused || video.ended) return;
+function drawFrame() {
+    if (!isDrawing) return;
     ctx.filter = `brightness(${brightness.value}) grayscale(${grayscale.value})`;
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.filter = "none";
     ctx.fillStyle = "red";
     ctx.font = "30px Arial";
     ctx.fillText(overlayText.value, 20, 50);
-    requestAnimationFrame(drawFrame);
+    rafId = requestAnimationFrame(drawFrame);
 }
 
-function play(){
-    video.currentTime = parseFloat(startInput.value) || 0;
-    video.play();
-    drawFrame();
-}
+function startDrawing() { if (isDrawing) return; isDrawing=true; drawFrame();}
+function stopDrawing() { isDrawing=false; if(rafId) cancelAnimationFrame(rafId);}
+function play() { video.currentTime=parseFloat(startInput.value)||0; video.play(); startDrawing();}
+function pause() { video.pause(); stopDrawing();}
 
-function pause(){
-    video.pause();
-}
-
-function exportVideo(){
-    const stream = canvas.captureStream(30);
-    mediaRecorder = new MediaRecorder(stream, {mimeType:"video/webm"});
+function exportVideo() {
+    const start = parseFloat(startInput.value)||0;
+    const end = parseFloat(endInput.value)||video.duration;
     recordedChunks=[];
-    mediaRecorder.ondataavailable = e=>{if(e.data.size>0) recordedChunks.push(e.data);}
-    mediaRecorder.onstop = ()=>{
-        const blob = new Blob(recordedChunks,{type:"video/webm"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "terminator_video.webm";
-        a.click();
+    const stream=canvas.captureStream(30);
+    mediaRecorder=new MediaRecorder(stream,{mimeType:"video/webm"});
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0) recordedChunks.push(e.data);}
+    mediaRecorder.onstop=()=>{
+        const blob=new Blob(recordedChunks,{type:"video/webm"});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");
+        a.href=url;a.download="terminator_video.webm";a.click();
     };
     mediaRecorder.start();
-    video.currentTime = parseFloat(startInput.value) || 0;
-    video.play();
-    drawFrame();
-    setTimeout(()=>{video.pause(); mediaRecorder.stop();}, (endInput.value-startInput.value)*1000);
+    video.currentTime=start; video.play(); startDrawing();
+    const checkEnd=()=>{
+        if(video.currentTime>=end){video.pause(); mediaRecorder.stop(); stopDrawing();}
+        else requestAnimationFrame(checkEnd);
+    };
+    checkEnd();
 }
 </script>
 
