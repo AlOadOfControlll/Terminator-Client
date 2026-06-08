@@ -154,7 +154,15 @@ pre{height:100%;overflow:auto;}
 
 <script>
 /* BOOT */
-setTimeout(()=>{document.getElementById("boot").style.display="none";document.getElementById("desktop").style.display="block";startMatrix();},4000);
+window.onload = () => {
+  setTimeout(() => {
+    const boot = document.getElementById("boot");
+    const desktop = document.getElementById("desktop");
+    if (boot) boot.style.display = "none";
+    if (desktop) desktop.style.display = "block";
+    startMatrix();
+  }, 4000);
+};
 
 /* START MENU */
 function toggleStart(){const s=document.getElementById("startMenu");s.style.display=s.style.display==="flex"?"none":"flex";}
@@ -175,8 +183,18 @@ function setTheme(c){document.documentElement.style.setProperty("--theme",c);}
 function log(t){const l=document.getElementById("terminalLog");l.innerText+=t+"\n";l.scrollTop=l.scrollHeight;}
 function cmd(e){if(e.key==="Enter"){let v=e.target.value.toLowerCase();e.target.value="";if(v==="scan")log("Scanning system... OK (simulated)");else if(v==="overlay")toggleOverlay();else if(v==="theme")log("Use settings panel");else if(v.startsWith("open")){if(v.includes("browser"))openApp('browserWin');if(v.includes("files"))openApp('filesWin');}else log("Unknown command");}}
 
-/* BROWSER */
+/* BROWSER WITH TABS */
 let tabs=[];
-function newTab(name="New Tab"){const tbar=document.getElementById("browserTabs");const tab=document.createElement("div");tab.className="tab active";tab.innerText=name;tbar.appendChild(tab);tabs.push(tab);setActiveTab(tab);}
-function setActiveTab(tab){tabs.forEach(t=>t.classList.remove("active"));tab.classList.add("active");document.getElementById("browserFrame").src="";}
-function go(){let u=document.getElementById("urlInput").value;if(!u.startsWith("http"))u="https://www.google.com/search
+function newTab(name="New Tab"){
+  const tbar=document.getElementById("browserTabs");
+  const tab=document.createElement("div");
+  tab.className="tab active";
+  tab.innerText=name;
+  tab.onclick=()=>setActiveTab(tab);
+  tbar.appendChild(tab);
+  tabs.push(tab);
+  setActiveTab(tab);
+}
+function setActiveTab(tab){
+  tabs.forEach(t=>t.classList.remove("active"));
+  tab.classList
