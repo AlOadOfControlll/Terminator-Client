@@ -2,213 +2,248 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Terminator Video Editor</title>
+<title>Terminator CapCut Editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body {
     margin:0;
-    font-family:Arial, sans-serif;
-    background:#0a0a0a;
-    color:white;
-    display:flex;
-    flex-direction:column;
-    height:100vh;
+    font-family:Arial;
+    background:#000;
+    color:#fff;
     overflow:hidden;
 }
-header {
-    display:none; /* Will show after intro */
-}
-#intro {
-    position:absolute;
-    top:0; left:0;
-    width:100%; height:100%;
+
+/* ================= BOOT SCREEN ================= */
+#boot {
+    position:fixed;
+    inset:0;
+    background:black;
     display:flex;
     justify-content:center;
     align-items:center;
     flex-direction:column;
-    background:#0a0a0a;
-    z-index:10;
+    font-size:40px;
     color:red;
-    font-size:50px;
     text-shadow:0 0 20px red;
+    animation: flicker 1s infinite alternate;
+    z-index:999;
 }
-#intro.hidden { display:none; }
-#projectPanel {
+
+@keyframes flicker {
+    from {opacity:0.7;}
+    to {opacity:1;}
+}
+
+/* ================= MENU ================= */
+#menu {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:#0a0a0a;
+    flex-direction:row;
+}
+
+.menu-left {
+    width:250px;
+    background:#111;
+    border-right:2px solid red;
+    display:flex;
+    flex-direction:column;
+    padding:20px;
+    gap:15px;
+}
+
+.menu-left button {
+    background:red;
+    border:none;
+    color:white;
+    padding:12px;
+    cursor:pointer;
+}
+
+/* ================= EDITOR ================= */
+#editor {
     display:none;
     flex-direction:column;
-    gap:10px;
-    padding:20px;
+    height:100vh;
 }
-.container {
+
+.top {
     display:flex;
-    flex:1;
+    height:85%;
+}
+
+.sidebar {
+    width:220px;
+    background:#111;
+    border-right:2px solid red;
     padding:10px;
+}
+
+.preview {
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#000;
+}
+
+.inspector {
+    width:220px;
+    background:#111;
+    border-left:2px solid red;
+    padding:10px;
+}
+
+/* ================= TIMELINE ================= */
+.timeline {
+    height:15%;
+    background:#0d0d0d;
+    border-top:2px solid red;
+    display:flex;
+    align-items:center;
+    padding:10px;
+    overflow-x:auto;
     gap:10px;
 }
-.controls {
-    width:250px;
+
+.clip {
+    min-width:120px;
+    height:60px;
+    background:red;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+}
+
+/* ================= CANVAS ================= */
+canvas, video {
+    max-width:100%;
+    max-height:100%;
+    display:none;
+}
+
+/* ================= MODAL ================= */
+#modal {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.8);
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-box {
+    background:#111;
+    border:2px solid red;
+    padding:20px;
     display:flex;
     flex-direction:column;
     gap:10px;
-    background:#111;
-    border:2px solid red;
-    padding:10px;
-    border-radius:8px;
-}
-input, textarea, select {
-    width:100%;
-    background:#111;
-    color:#ff0000;
-    border:1px solid red;
-    padding:5px;
-    font-family:monospace;
-}
-video, canvas {
-    flex:1;
-    background:#222;
-    border:2px solid red;
-    border-radius:8px;
-    max-height:70vh;
 }
 </style>
 </head>
+
 <body>
 
-<div id="intro">
-    <div id="welcomeText">Welcome, Terminator!</div>
+<!-- BOOT -->
+<div id="boot">SYSTEM ONLINE...<br>WELCOME TERMINATOR</div>
+
+<!-- MENU -->
+<div id="menu">
+    <div class="menu-left">
+        <button onclick="newProject()">New Project</button>
+        <button onclick="alert('Settings coming')">Settings</button>
+        <button onclick="alert('CapCut-style editor build')">About</button>
+    </div>
 </div>
 
-<div id="projectPanel">
-    <label>New Project Name</label><input id="projectName" placeholder="My Epic Video">
-    <label>Aspect Ratio</label>
-    <select id="aspectRatio">
-        <option value="16:9">16:9</option>
-        <option value="9:16">9:16</option>
-        <option value="1:1">1:1</option>
-    </select>
-    <button id="startProject">Start Project</button>
+<!-- MODAL -->
+<div id="modal">
+    <div class="modal-box">
+        <h2>New Project</h2>
+        <button onclick="startBlank()">Start Blank</button>
+        <input type="file" id="fileInput" accept="video/*">
+        <button onclick="loadVideo()">Load Video</button>
+    </div>
 </div>
 
-<header>
-<h1>Terminator Video Editor</h1>
-<div>
-<input type="file" id="videoFile" accept="video/*">
-<button onclick="play()">Play</button>
-<button onclick="pause()">Pause</button>
-<button onclick="exportVideo()">Export</button>
-</div>
-</header>
+<!-- EDITOR -->
+<div id="editor">
 
-<div class="container">
-<div class="controls">
-<label>Start (sec)</label><input type="number" id="start" value="0" min="0">
-<label>End (sec)</label><input type="number" id="end" value="10" min="0">
-<label>Text overlay</label><textarea id="overlayText">Terminator says hello!</textarea>
-<label>Brightness</label><input type="range" id="brightness" min="0" max="2" value="1" step="0.05">
-<label>Grayscale</label><input type="range" id="grayscale" min="0" max="1" value="0" step="0.05">
+    <div class="top">
+
+        <div class="sidebar">
+            <h3>Media</h3>
+            <h3>Text</h3>
+            <h3>Audio</h3>
+            <h3>Overlay</h3>
+        </div>
+
+        <div class="preview">
+            <video id="video" controls></video>
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="inspector">
+            <h3>Inspector</h3>
+            <label>Speed</label>
+            <input type="range" min="0.5" max="2" step="0.1" value="1">
+            <label>Aspect</label>
+            <select>
+                <option>16:9</option>
+                <option>9:16</option>
+                <option>1:1</option>
+            </select>
+        </div>
+
+    </div>
+
+    <div class="timeline">
+        <div class="clip">Clip 1</div>
+        <div class="clip">Audio</div>
+        <div class="clip">Text</div>
+    </div>
+
 </div>
 
-<video id="video" controls></video>
-<canvas id="canvas"></canvas>
-</div>
-
+<!-- SCRIPT -->
 <script>
-const intro = document.getElementById("intro");
-const welcomeText = document.getElementById("welcomeText");
-const projectPanel = document.getElementById("projectPanel");
-const startProjectBtn = document.getElementById("startProject");
 
-let step = 0;
+setTimeout(()=>{
+    document.getElementById("boot").style.display="none";
+    document.getElementById("menu").style.display="flex";
+},3000);
 
-// Intro sequence
-function showIntroStep() {
-    if(step === 0){
-        welcomeText.innerText = "Welcome, Terminator!";
-    } else if(step === 1){
-        welcomeText.innerText = "New Project Settings & Profile";
-    } else if(step === 2){
-        welcomeText.innerText = "About";
-    } else {
-        intro.classList.add("hidden");
-        projectPanel.style.display = "flex";
-        return;
+/* MENU */
+function newProject(){
+    document.getElementById("modal").style.display="flex";
+}
+
+/* MODAL */
+function startBlank(){
+    openEditor();
+}
+
+function loadVideo(){
+    const file=document.getElementById("fileInput").files[0];
+    if(file){
+        const video=document.getElementById("video");
+        video.src=URL.createObjectURL(file);
     }
-    step++;
-    setTimeout(showIntroStep, 3000); // 3 seconds per step
-}
-showIntroStep();
-
-// Start project button
-startProjectBtn.addEventListener("click", ()=>{
-    projectPanel.style.display = "none";
-    document.querySelector("header").style.display = "flex";
-    document.querySelector(".container").style.display = "flex";
-    // Initialize canvas, video, etc.
-});
-
-// Existing video editor setup
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-const overlayText = document.getElementById("overlayText");
-const brightness = document.getElementById("brightness");
-const grayscale = document.getElementById("grayscale");
-const startInput = document.getElementById("start");
-const endInput = document.getElementById("end");
-
-let mediaRecorder;
-let recordedChunks = [];
-let isDrawing = false;
-let rafId = null;
-
-document.getElementById("videoFile").addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (file) video.src = URL.createObjectURL(file);
-});
-
-video.addEventListener("loadedmetadata", () => {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-});
-
-function drawFrame() {
-    if (!isDrawing) return;
-    ctx.filter = `brightness(${brightness.value}) grayscale(${grayscale.value})`;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    ctx.filter = "none";
-    ctx.fillStyle = "red";
-    ctx.font = "30px Arial";
-    ctx.fillText(overlayText.value, 20, 50);
-    rafId = requestAnimationFrame(drawFrame);
+    openEditor();
 }
 
-function startDrawing() { if (isDrawing) return; isDrawing=true; drawFrame();}
-function stopDrawing() { isDrawing=false; if(rafId) cancelAnimationFrame(rafId);}
-function play() { video.currentTime=parseFloat(startInput.value)||0; video.play(); startDrawing();}
-function pause() { video.pause(); stopDrawing();}
-
-function exportVideo() {
-    const start = parseFloat(startInput.value)||0;
-    const end = parseFloat(endInput.value)||video.duration;
-    recordedChunks=[];
-    const stream=canvas.captureStream(30);
-    mediaRecorder=new MediaRecorder(stream,{mimeType:"video/webm"});
-    mediaRecorder.ondataavailable=e=>{if(e.data.size>0) recordedChunks.push(e.data);}
-    mediaRecorder.onstop=()=>{
-        const blob=new Blob(recordedChunks,{type:"video/webm"});
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement("a");
-        a.href=url;a.download="terminator_video.webm";a.click();
-    };
-    mediaRecorder.start();
-    video.currentTime=start; video.play(); startDrawing();
-    const checkEnd=()=>{
-        if(video.currentTime>=end){video.pause(); mediaRecorder.stop(); stopDrawing();}
-        else requestAnimationFrame(checkEnd);
-    };
-    checkEnd();
+/* OPEN EDITOR */
+function openEditor(){
+    document.getElementById("menu").style.display="none";
+    document.getElementById("modal").style.display="none";
+    document.getElementById("editor").style.display="flex";
 }
+
 </script>
 
 </body>
