@@ -2,248 +2,131 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Terminator CapCut Editor</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Safe Hacker Mod Menu</title>
 <style>
 body {
-    margin:0;
-    font-family:Arial;
-    background:#000;
-    color:#fff;
-    overflow:hidden;
+  margin:0;
+  font-family: 'Courier New', monospace;
+  background:black;
+  color:lime;
+  overflow:hidden;
 }
 
-/* ================= BOOT SCREEN ================= */
-#boot {
-    position:fixed;
-    inset:0;
-    background:black;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    font-size:40px;
-    color:red;
-    text-shadow:0 0 20px red;
-    animation: flicker 1s infinite alternate;
-    z-index:999;
+/* Loading screen */
+#loader {
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  font-size:50px;
+  text-shadow:0 0 20px lime;
+  animation:flicker 1s infinite alternate;
 }
 
-@keyframes flicker {
-    from {opacity:0.7;}
-    to {opacity:1;}
+@keyframes flicker { from{opacity:0.7;} to{opacity:1;} }
+
+/* Main dashboard */
+#dashboard {
+  display:none;
+  height:100vh;
+  display:flex;
+  flex-direction:row;
 }
 
-/* ================= MENU ================= */
-#menu {
-    display:none;
-    position:fixed;
-    inset:0;
-    background:#0a0a0a;
-    flex-direction:row;
-}
-
-.menu-left {
-    width:250px;
-    background:#111;
-    border-right:2px solid red;
-    display:flex;
-    flex-direction:column;
-    padding:20px;
-    gap:15px;
-}
-
-.menu-left button {
-    background:red;
-    border:none;
-    color:white;
-    padding:12px;
-    cursor:pointer;
-}
-
-/* ================= EDITOR ================= */
-#editor {
-    display:none;
-    flex-direction:column;
-    height:100vh;
-}
-
-.top {
-    display:flex;
-    height:85%;
-}
-
+/* Sidebar menu */
 .sidebar {
-    width:220px;
-    background:#111;
-    border-right:2px solid red;
-    padding:10px;
+  width:250px;
+  background:#111;
+  border-right:2px solid lime;
+  display:flex;
+  flex-direction:column;
+  padding:20px;
+  gap:10px;
 }
 
-.preview {
-    flex:1;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:#000;
+.sidebar button {
+  background:lime;
+  color:black;
+  border:none;
+  padding:12px;
+  cursor:pointer;
+  font-weight:bold;
 }
 
-.inspector {
-    width:220px;
-    background:#111;
-    border-left:2px solid red;
-    padding:10px;
+/* Main screen */
+.main {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:20px;
+  overflow:auto;
 }
 
-/* ================= TIMELINE ================= */
-.timeline {
-    height:15%;
-    background:#0d0d0d;
-    border-top:2px solid red;
-    display:flex;
-    align-items:center;
-    padding:10px;
-    overflow-x:auto;
-    gap:10px;
+/* Output console */
+.console {
+  background:#000;
+  border:2px solid lime;
+  flex:1;
+  padding:10px;
+  overflow-y:auto;
+  font-size:14px;
+  white-space:pre-wrap;
 }
 
-.clip {
-    min-width:120px;
-    height:60px;
-    background:red;
-    color:white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
+/* Fancy effect */
+.fancy-button {
+  position:relative;
+  overflow:hidden;
 }
 
-/* ================= CANVAS ================= */
-canvas, video {
-    max-width:100%;
-    max-height:100%;
-    display:none;
+.fancy-button::before {
+  content:'';
+  position:absolute;
+  top:0; left:-100%;
+  width:100%; height:100%;
+  background:rgba(255,255,255,0.2);
+  transform:skewX(-20deg);
+  transition:0.5s;
 }
 
-/* ================= MODAL ================= */
-#modal {
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.8);
-    justify-content:center;
-    align-items:center;
-}
-
-.modal-box {
-    background:#111;
-    border:2px solid red;
-    padding:20px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+.fancy-button:hover::before {
+  left:100%;
 }
 </style>
 </head>
-
 <body>
 
-<!-- BOOT -->
-<div id="boot">SYSTEM ONLINE...<br>WELCOME TERMINATOR</div>
+<div id="loader">WELCOME TERMINATOR</div>
 
-<!-- MENU -->
-<div id="menu">
-    <div class="menu-left">
-        <button onclick="newProject()">New Project</button>
-        <button onclick="alert('Settings coming')">Settings</button>
-        <button onclick="alert('CapCut-style editor build')">About</button>
-    </div>
+<div id="dashboard">
+  <div class="sidebar">
+    <button class="fancy-button" onclick="fakeAction('Scan network...')">Network Scan</button>
+    <button class="fancy-button" onclick="fakeAction('Bypassing firewall...')">Firewall Bypass</button>
+    <button class="fancy-button" onclick="fakeAction('Accessing database...')">Database Access</button>
+    <button class="fancy-button" onclick="fakeAction('Modifying settings...')">Settings Mod</button>
+    <button class="fancy-button" onclick="fakeAction('Injecting code...')">Code Injection</button>
+  </div>
+  <div class="main">
+    <h1>Safe Hacker Mod Menu</h1>
+    <div class="console" id="console"></div>
+  </div>
 </div>
 
-<!-- MODAL -->
-<div id="modal">
-    <div class="modal-box">
-        <h2>New Project</h2>
-        <button onclick="startBlank()">Start Blank</button>
-        <input type="file" id="fileInput" accept="video/*">
-        <button onclick="loadVideo()">Load Video</button>
-    </div>
-</div>
-
-<!-- EDITOR -->
-<div id="editor">
-
-    <div class="top">
-
-        <div class="sidebar">
-            <h3>Media</h3>
-            <h3>Text</h3>
-            <h3>Audio</h3>
-            <h3>Overlay</h3>
-        </div>
-
-        <div class="preview">
-            <video id="video" controls></video>
-            <canvas id="canvas"></canvas>
-        </div>
-
-        <div class="inspector">
-            <h3>Inspector</h3>
-            <label>Speed</label>
-            <input type="range" min="0.5" max="2" step="0.1" value="1">
-            <label>Aspect</label>
-            <select>
-                <option>16:9</option>
-                <option>9:16</option>
-                <option>1:1</option>
-            </select>
-        </div>
-
-    </div>
-
-    <div class="timeline">
-        <div class="clip">Clip 1</div>
-        <div class="clip">Audio</div>
-        <div class="clip">Text</div>
-    </div>
-
-</div>
-
-<!-- SCRIPT -->
 <script>
+setTimeout(() => {
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+}, 4000);
 
-setTimeout(()=>{
-    document.getElementById("boot").style.display="none";
-    document.getElementById("menu").style.display="flex";
-},3000);
+const consoleEl = document.getElementById('console');
 
-/* MENU */
-function newProject(){
-    document.getElementById("modal").style.display="flex";
+function fakeAction(text){
+  const msg = `[${new Date().toLocaleTimeString()}] ${text}`;
+  consoleEl.textContent += msg + '\n';
+  consoleEl.scrollTop = consoleEl.scrollHeight;
 }
-
-/* MODAL */
-function startBlank(){
-    openEditor();
-}
-
-function loadVideo(){
-    const file=document.getElementById("fileInput").files[0];
-    if(file){
-        const video=document.getElementById("video");
-        video.src=URL.createObjectURL(file);
-    }
-    openEditor();
-}
-
-/* OPEN EDITOR */
-function openEditor(){
-    document.getElementById("menu").style.display="none";
-    document.getElementById("modal").style.display="none";
-    document.getElementById("editor").style.display="flex";
-}
-
 </script>
 
 </body>
